@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+.env
+*.local.json
+logs/
+qa/
+
+# Evidencias e manuais internos do ERP
+capturas_tela220/
+evidencias/
+mapeamento/
+traces/
+MANUAL*.md
+SUPER_MANUAL*.md

@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1f3a">
+  <title>Ordens de facção · NPD</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='of.css') }}">
+  <script src="{{ url_for('static', filename='of.js') }}" defer></script>
+</head>
+<body>
+<svg class="svg-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <symbol id="i-factory" viewBox="0 0 24 24"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H5v20h14V7zM14 2v6h5M8 12h8M8 16h6"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5M6.1 6.1A8 8 0 0 1 19 9M5 15a8 8 0 0 0 12.9 2.9"/></symbol>
+</svg>
+<a class="skip-link" href="#main">Ir para o conteúdo</a>
+<header class="top-shell">
+  <div class="top-bar"><div class="top-inner">
+    <a class="brand" href="/" aria-label="NPD Gestão de Produção"><span class="brand-logo">NPD</span><span class="brand-divider"></span><span class="brand-title">GESTÃO DE PRODUÇÃO</span></a>
+    <nav class="modules" aria-label="Módulos"><span class="module active"><svg><use href="#i-factory"/></svg> Ordens de facção</span></nav>
+    <div class="top-right"><span id="connection" class="connection"><span class="status-dot"></span>Conectando ao SISPLAN</span><span class="avatar" aria-label="Planejamento e controle da produção">PCP</span></div>
+  </div></div>
+  <nav class="sub-bar" aria-label="Ordens de facção"><div class="sub-inner">
+    <button class="sub-link active" id="nav-new" type="button" aria-current="page">Nova OF</button>
+    <button class="sub-link" id="nav-existing" type="button">Consultar OFs</button>
+    <span class="sub-note"><span class="read-dot"></span>Consultas e conferência · sem gravação</span>
+  </div></nav>
+</header>
+<main class="app-main" id="main">
+  <div id="page-new">
+    <section class="page-heading"><div><p class="eyebrow">PRODUÇÃO / ORDENS DE FACÇÃO</p><h1>Nova ordem de facção</h1><p class="subtitle">Selecione o pedido e o produto para preparar a ordem de produção.</p></div><div class="heading-actions"><button type="button" class="btn btn-ghost" id="clear-form"><svg><use href="#i-refresh"/></svg>Limpar formulário</button><button type="button" class="btn btn-primary" id="review-top"><svg><use href="#i-check"/></svg>Conferir OF</button></div></section>
+    <div class="notice" id="intro-notice"><span class="notice-icon">i</span><p>Você pode consultar o ERP e conferir os dados da ordem. <strong>Nenhuma OF será gravada nesta versão.</strong></p></div>
+    <div class="alert error" id="global-error" hidden role="alert"></div>
+    <div class="work-layout">
+      <div class="form-column">
+        <section class="card" id="section-origin">
+          <header class="card-heading"><div class="heading-label"><span class="section-number">01</span><div><h2>Pedido e produto</h2><p>A origem da sua ordem de produção</p></div></div><span class="tag">Dados do SISPLAN</span></header>
+          <div class="card-body">
+            <div class="form-grid origin-grid">
+              <div class="form-group"><label for="of-number">Número da OF</label><input id="of-number" placeholder="Automático" disabled><span class="field-help">O número ainda não será reservado.</span></div>
+              <div class="form-group"><label for="empresa">Empresa <span class="required">*</span></label><select id="empresa" aria-label="Empresa"><option value="">Carregando…</option></select></div>
+              <div class="form-group span-2"><label for="pedido">Pedido vinculado</label><div class="input-action"><input id="pedido" type="text" inputmode="numeric" autocomplete="off" placeholder="Número do pedido"><button type="button" id="find-order" class="input-button" aria-label="Pesquisar pedido"><svg><use href="#i-search"/></svg></button></div><span class="field-help" id="order-help">Busque pelo número ou pelo cliente.</span></div>
+            </div>
+            <div id="customer-card" class="selected-context" hidden><span class="context-icon"><svg><use href="#i-file"/></svg></span><div><strong id="customer-name"></strong><span id="customer-detail"></span></div><span id="order-status" class="tag"></span></div>
+            <div class="form-group product-group"><label for="produto">Produto <span class="required">*</span></label><div class="input-action"><input id="produto" type="text" autocomplete="off" placeholder="Código ou descrição do produto"><button type="button" id="find-product" class="input-button with-text"><svg><use href="#i-search"/></svg><span>Pesquisar</span></button></div></div>
+            <div class="product-selected" id="product-selected" hidden><div class="product-label"><span class="tag blue" id="product-unit"></span><span id="product-code"></span></div><h3 id="product-description"></h3></div>
+            <details id="order-items" hidden><summary>Produtos deste pedido <span id="order-item-count" class="count"></span></summary><div class="table-scroll"><table class="data-table"><thead><tr><th>Produto</th><th>Cor / tam.</th><th class="numeric">Qtd. do pedido</th><th></th></tr></thead><tbody id="order-items-body"></tbody></table></div></details>
+          </div>
+        </section>
+        <section class="card" id="section-data">
+          <header class="card-heading"><div class="heading-label"><span class="section-number">02</span><div><h2>Dados da ordem</h2><p>Datas, planejamento e informações gerais</p></div></div></header>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-group"><label for="periodo">Período <span class="required">*</span></label><select id="periodo"><option value="">Selecione…</option></select></div>
+              <div class="form-group"><label for="cadastro">Cadastro</label><input id="cadastro" type="date" readonly></div>
+              <div class="form-group"><label for="inicio">Início <span class="required">*</span></label><input id="inicio" type="date" required></div>
+              <div class="form-group"><label for="fim">Fim <span class="required">*</span></label><input id="fim" type="date" required></div>
+              <div class="form-group span-2"><label for="tipo">Tipo de produção <span class="required">*</span></label><select id="tipo"><option value="">Selecione…</option></select></div>
+              <div class="form-group span-2"><label for="deposito">Depósito <span class="required">*</span></label><select id="deposito"><option value="">Selecione…</option></select></div>
+              <div class="form-group"><label for="programacao">Programação</label><input id="programacao" value="00000000" maxlength="15"></div>
+              <div class="form-group"><label for="percentual">Percentual (%)</label><input id="percentual" inputmode="decimal" value="0" maxlength="12"></div>
+              <div class="form-group"><label for="volumes">Volumes</label><input id="volumes" type="number" min="0" step="1" value="0"></div>
+              <div class="form-group"><label>Tipo da OF</label><div class="fixed-option"><span class="radio-indicator"></span>Normal</div></div>
+              <div class="form-group full-width"><label for="observacao">Observações</label><textarea id="observacao" rows="4" placeholder="Observações do pedido e instruções para a produção"></textarea><span class="field-help">As observações do pedido são carregadas ao selecioná-lo e podem ser ajustadas.</span></div>
+            </div>
+            <div class="options"><label class="checkbox"><input id="gerar-faccao" type="checkbox" checked><span>Gerar facção</span></label><label class="checkbox"><input id="gerar-consumos" type="checkbox" checked><span>Gerar consumos</span></label><label class="checkbox"><input id="semana" type="checkbox" checked><span>Desconsiderar final de semana</span></label></div>
+          </div>
+        </section>
+        <section class="card" id="section-grade">
+          <header class="card-heading"><div class="heading-label"><span class="section-number">03</span><div><h2>Grade de produção</h2><p>Informe a quantidade por cor e tamanho</p></div></div><button type="button" class="btn btn-small btn-outline" id="add-grade"><svg><use href="#i-plus"/></svg>Adicionar linha</button></header>
+          <div class="table-scroll"><table class="data-table grade-table"><thead><tr><th>Cor</th><th>Tamanho</th><th class="numeric">Quantidade a produzir</th><th class="remove-col"><span class="sr-only">Ações</span></th></tr></thead><tbody id="grade-body"></tbody><tfoot><tr><td colspan="2">Total da ordem</td><td class="numeric" id="grade-total">0</td><td></td></tr></tfoot></table></div>
+          <div class="card-foot"><span>A quantidade pode ser ajustada independentemente do pedido.</span><span class="tag" id="grade-unit">UN</span></div>
+          <datalist id="colors-list"></datalist><datalist id="sizes-list"></datalist>
+        </section>
+        <section class="card" id="section-route">
+          <header class="card-heading"><div class="heading-label"><span class="section-number">04</span><div><h2>Partes e fluxo de produção</h2><p>O envio começa no primeiro setor do fluxo selecionado</p></div></div></header>
+          <div class="card-body"><div id="parts-list" class="parts-list"><div class="empty compact">Selecione um produto para carregar as partes e os setores cadastrados.</div></div><div id="route-list"></div></div>
+        </section>
+        <section class="card" id="section-consumption">
+          <header class="card-heading"><div class="heading-label"><span class="section-number">05</span><div><h2>Consumos previstos</h2><p>Calculados a partir da ficha técnica e da grade informada</p></div></div><span id="calculation-status" class="tag">Aguardando produto</span></header>
+          <div id="consumption-empty" class="empty"><span class="empty-icon"><svg><use href="#i-file"/></svg></span><strong>Os materiais aparecerão aqui</strong><p>Selecione o produto e preencha a grade para conferir os consumos.</p></div>
+          <div class="table-scroll" id="consumption-table" hidden><table class="data-table"><thead><tr><th>Material</th><th>Setor</th><th>Un.</th><th class="numeric">Unitário</th><th class="numeric">Consumo total</th></tr></thead><tbody id="consumption-body"></tbody></table></div>
+        </section>
+        <details class="card complements" id="complements"><summary><span class="heading-label"><span class="section-number">06</span><span>Informações complementares</span></span><span class="tag" id="complement-count">0 campos</span></summary><div class="card-body"><div id="complements-grid" class="form-grid"></div></div></details>
+      </div>
+      <aside class="summary-column" aria-label="Resumo da ordem">
+        <section class="card summary-card"><header class="summary-heading"><svg><use href="#i-file"/></svg><h2>Resumo da OF</h2><span class="tag">Prévia</span></header><div class="summary-body">
+          <div class="total-block"><span>QUANTIDADE A PRODUZIR</span><strong id="summary-total">0</strong><span id="summary-unit">peças</span></div>
+          <dl class="summary-details"><div><dt>Pedido</dt><dd id="summary-order">—</dd></div><div><dt>Produto</dt><dd id="summary-product">—</dd></div><div><dt>Início</dt><dd id="summary-start">—</dd></div><div><dt>Fim</dt><dd id="summary-end">—</dd></div><div><dt>Partes selecionadas</dt><dd id="summary-parts">0</dd></div><div><dt>Setor inicial</dt><dd id="summary-sector">—</dd></div></dl>
+          <div class="materials-summary" id="summary-materials"><h3>Materiais previstos</h3><p>Preencha a grade para calcular.</p></div>
+          <div class="summary-note"><svg><use href="#i-check"/></svg><p>A conferência utiliza os dados atuais do SISPLAN. Não grava nem reserva uma ordem.</p></div>
+          <button type="button" class="btn btn-primary btn-full" id="review"><svg><use href="#i-check"/></svg>Conferir dados da OF</button>
+          <button type="button" class="btn btn-outline btn-full" id="download" disabled><svg><use href="#i-file"/></svg>Baixar conferência</button>
+        </div></section>
+        <div class="side-help"><strong>Preenchimento mais simples</strong><p>Escolha um pedido, selecione o produto e ajuste a grade. O fluxo e a ficha de materiais são consultados automaticamente.</p></div>
+      </aside>
+    </div>
+  </div>
+  <div id="page-existing" hidden>
+    <section class="page-heading"><div><p class="eyebrow">PRODUÇÃO / ORDENS DE FACÇÃO</p><h1>Consultar ordens de facção</h1><p class="subtitle">Consulte as ordens já cadastradas no SISPLAN.</p></div><button class="btn btn-primary" type="button" id="back-new"><svg><use href="#i-plus"/></svg>Preparar nova OF</button></section>
+    <section class="card"><div class="card-body"><label class="search-label" for="existing-search">Número da OF, pedido ou código do produto</label><div class="search-bar"><svg><use href="#i-search"/></svg><input type="search" id="existing-search" placeholder="Ex.: 019400 ou 23393" autocomplete="off"><button type="button" class="btn btn-primary" id="existing-search-button">Consultar</button></div><p class="field-help" id="existing-message">As consultas consideram a empresa selecionada no formulário.</p></div><div class="table-scroll"><table class="data-table existing-table"><thead><tr><th>OF</th><th>Produto</th><th>Pedido</th><th>Início / fim</th><th class="numeric">Quantidade</th><th>Situação</th><th></th></tr></thead><tbody id="existing-body"></tbody></table></div></section>
+  </div>
+  <footer class="page-footer"><span>NPD · Ordens de facção</span><span>Dados consultados no SISPLAN · Acesso de leitura</span></footer>
+</main>
+<dialog id="lookup-dialog" class="lookup-dialog"><div class="dialog-heading"><div><p class="eyebrow" id="lookup-eyebrow">CONSULTA AO SISPLAN</p><h2 id="lookup-title">Pesquisar pedido</h2></div><button type="button" class="icon-button" data-close="lookup-dialog" aria-label="Fechar pesquisa"><svg><use href="#i-close"/></svg></button></div><div class="dialog-content"><label class="search-label" for="lookup-search" id="lookup-label">Número ou cliente</label><div class="search-bar"><svg><use href="#i-search"/></svg><input type="search" id="lookup-search" placeholder="Digite para pesquisar…" autocomplete="off"><button type="button" class="btn btn-primary" id="lookup-button">Pesquisar</button></div><p id="lookup-message" class="field-help" role="status"></p><div id="lookup-results" class="lookup-results"></div></div></dialog>
+<dialog id="review-dialog" class="review-dialog"><div class="dialog-heading"><div><p class="eyebrow" id="review-eyebrow">CONFERÊNCIA</p><h2 id="review-title">Conferência da ordem</h2></div><button type="button" class="icon-button" data-close="review-dialog" aria-label="Fechar conferência"><svg><use href="#i-close"/></svg></button></div><div class="dialog-content" id="review-content"></div><div class="dialog-footer"><button type="button" class="btn btn-outline" data-close="review-dialog">Voltar</button></div></dialog>
+<div id="toast" class="toast" role="status" hidden></div>
+</body>
+</html>
